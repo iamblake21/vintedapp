@@ -17,6 +17,10 @@ if ! command -v nginx >/dev/null; then
   if ss -ltnH '( sport = :80 )' | grep -q .; then
     echo "!! La porta 80 è già usata da un altro programma:" >&2
     ss -ltnp '( sport = :80 )' >&2
+    if command -v docker >/dev/null; then
+      echo "Container Docker attivi:" >&2
+      docker ps --format '  {{.Names}} | {{.Image}} | {{.Ports}} | {{.Status}}' >&2
+    fi
     exit 1
   fi
   echo "==> Installo nginx e certbot"

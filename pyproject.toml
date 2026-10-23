@@ -1,0 +1,18 @@
+[project]
+name = "vinted-alerts"
+version = "0.1.0"
+description = "Avvisi di prezzo per Vinted: monitora il feed e segnala gli affari"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.28"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+vinted-alerts = "vinted_alerts.cli:main"
+
+[tool.setuptools]
+packages = ["vinted_alerts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

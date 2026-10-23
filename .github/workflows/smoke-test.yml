@@ -1,7 +1,7 @@
 name: Vinted API smoke test
 on:
   push:
-    paths: ["scripts/*.py", "vinted_alerts/client.py", ".github/workflows/smoke-test.yml"]
+    paths: ["scripts/*.py", "vinted_alerts/**", "tests/**", ".github/workflows/smoke-test.yml"]
   workflow_dispatch:
 jobs:
   smoke:
@@ -11,6 +11,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install requests
-      - run: python scripts/probe.py
+      - run: pip install requests pytest
+      - run: python -m pytest -q
       - run: python scripts/smoke_test.py

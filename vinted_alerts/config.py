@@ -8,22 +8,22 @@ from pathlib import Path
 
 from .client import params_from_search_url
 
-# Friendly config keys -> Vinted API params.
+# Friendly config keys -> query params of the Vinted website search URL.
 _PARAM_KEYS = {
     "query": "search_text",
-    "catalog_ids": "catalog_ids",
-    "brand_ids": "brand_ids",
-    "size_ids": "size_ids",
-    "status_ids": "status_ids",
-    "color_ids": "color_ids",
-    "material_ids": "material_ids",
+    "catalog_ids": "catalog[]",
+    "brand_ids": "brand_ids[]",
+    "size_ids": "size_ids[]",
+    "status_ids": "status_ids[]",
+    "color_ids": "color_ids[]",
+    "material_ids": "material_ids[]",
 }
 
 
 @dataclass
 class Watch:
     name: str
-    params: dict[str, str]
+    params: list[tuple[str, str]]
     target_price: float | None = None    # alert when total price <= this
     below_average_pct: float | None = None  # alert when price is X% under the median
     min_samples: int = 20                # prices needed before trusting the median
@@ -45,10 +45,10 @@ class Config:
     discord: dict | None = None
 
 
-def _ids(value) -> str:
+def _values(value) -> list[str]:
     if isinstance(value, (list, tuple)):
-        return ",".join(str(v) for v in value)
-    return str(value)
+        return [str(v) for v in value]
+    return [str(value)]
 
 
 def _words(value) -> list[str]:
@@ -58,18 +58,21 @@ def _words(value) -> list[str]:
 def parse_watch(raw: dict) -> Watch:
     if "name" not in raw:
         raise ValueError("Ogni [[watch]] deve avere un 'name'")
-    params = params_from_search_url(raw["url"]) if raw.get("url") else {}
-    for key, api_key in _PARAM_KEYS.items():
+    params = params_from_search_url(raw["url"]) if raw.get("url") else []
+    for key, url_key in _PARAM_KEYS.items():
         if key in raw:
-            params[api_key] = _ids(raw[key])
+            params += [(url_key, v) for v in _values(raw[key])]
     # Prefilter on Vinted's side. Without below_average_pct we don't need a price
     # baseline, so target_price can narrow the search directly.
+    has = {k for k, _ in params}
     if "max_price" in raw:
-        params["price_to"] = str(raw["max_price"])
-    elif "target_price" in raw and "below_average_pct" not in raw:
-        params["price_to"] = str(raw["target_price"])
+        params.append(("price_to", str(raw["max_price"])))
+    elif "target_price" in raw and "below_average_pct" not in raw and "price_to" not in has:
+        params.append(("price_to", str(raw["target_price"])))
     if "min_price" in raw:
-        params["price_from"] = str(raw["min_price"])
+        params.append(("price_from", str(raw["min_price"])))
+    if any(k.startswith("price_") for k, _ in params) and "currency" not in has:
+        params.append(("currency", "EUR"))
     if not params:
         raise ValueError(f"Watch '{raw['name']}': serve almeno 'query' o 'url'")
     watch = Watch(

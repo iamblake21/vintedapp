@@ -1,0 +1,48 @@
+# Copia questo file in config.toml e modificalo.
+
+[general]
+domain = "www.vinted.it"
+interval = 60          # secondi tra una scansione e l'altra (non scendere troppo: rischi il blocco)
+pages_per_scan = 1     # pagine da 96 annunci lette a ogni scansione
+bootstrap_pages = 3    # al primo avvio legge N pagine per imparare il prezzo medio (senza avvisi)
+use_total_price = true # confronta il prezzo totale (con protezione acquisti)
+db_path = "vinted_alerts.db"
+
+# --- Notifiche (facoltative; la console è sempre attiva) ---
+# Telegram: crea un bot con @BotFather, poi scrivigli e prendi il chat_id
+# da https://api.telegram.org/bot<TOKEN>/getUpdates
+# [telegram]
+# bot_token = "123456:ABC..."
+# chat_id = "123456789"
+
+# [discord]
+# webhook_url = "https://discord.com/api/webhooks/..."
+
+# --- Ricerche da monitorare ---
+# Il modo più semplice: fai la ricerca sul sito Vinted con tutti i filtri
+# (categoria, marca, taglia, condizioni...) e incolla l'indirizzo in "url".
+
+[[watch]]
+name = "Nike Dunk Low"
+query = "nike dunk low"
+target_price = 45          # avvisa se il totale è <= 45 €
+below_average_pct = 35     # ...oppure se costa almeno il 35% meno della mediana
+min_price = 15             # sotto questo prezzo spesso sono falsi o solo scatole
+exclude_words = ["bambino", "bimbo", "scatola", "box", "lacci", "fake", "replica"]
+
+[[watch]]
+name = "iPhone 13"
+url = "https://www.vinted.it/catalog?search_text=iphone%2013"
+below_average_pct = 30
+min_samples = 30
+min_price = 150
+include_words = ["iphone 13"]
+exclude_words = ["cover", "custodia", "pellicola", "rotto", "ricambi", "pro", "mini"]
+
+# [[watch]]
+# name = "Lego Technic"
+# query = "lego technic"
+# brand_ids = [89162]       # id presi dall'URL del sito (brand_ids[]=...)
+# status_ids = [6, 1]       # condizioni (6 = nuovo con cartellino, 1 = nuovo senza)
+# max_price = 80            # filtro lato Vinted
+# target_price = 40

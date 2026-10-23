@@ -22,8 +22,6 @@ def format_deal(watch_name: str, deal: Deal) -> str:
     details = " · ".join(x for x in (item.brand, item.size, item.condition) if x)
     if details:
         lines.append(details)
-    if item.seller:
-        lines.append(f"👤 {item.seller}")
     lines.append(item.url)
     return "\n".join(lines)
 

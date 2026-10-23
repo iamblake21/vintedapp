@@ -130,7 +130,7 @@ if [[ ! -d $CERT ]]; then
   echo "==> IP pubblico del server: ${MY_IP:-sconosciuto}"
   ready=1
   for n in "${NAMES[@]}"; do
-    ips=$(getent ahostsv4 "$n" | awk '{print $1}' | sort -u | tr '\n' ' ')
+    ips=$( (getent ahostsv4 "$n" || true) | awk '{print $1}' | sort -u | tr '\n' ' ')
     echo "    $n -> ${ips:-nessun record}"
     [[ -n $MY_IP && " $ips " == *" $MY_IP "* ]] || ready=0
   done

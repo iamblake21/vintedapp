@@ -18,10 +18,21 @@ fi
 cd "$APP_DIR"
 bash deploy/install.sh
 
-if [[ -n "${TELEGRAM_BOT_TOKEN:-}" ]] && ! grep -q '^\[telegram\]' config.toml; then
+TELEGRAM_BOT_TOKEN=$(printf '%s' "${TELEGRAM_BOT_TOKEN:-}" | tr -d '[:space:]')
+export TELEGRAM_BOT_TOKEN
+if [[ -n "$TELEGRAM_BOT_TOKEN" ]] && ! grep -q '^\[telegram\]' config.toml; then
   CHAT_ID=$(.venv/bin/python - <<'PY'
-import os, requests
-r = requests.get(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/getUpdates", timeout=15).json()
+import os, sys, requests
+api = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN'].strip()}"
+me = requests.get(f"{api}/getMe", timeout=15).json()
+print("Telegram getMe:", me.get("ok"), me.get("result", {}).get("username"), me.get("description", ""),
+      file=sys.stderr)
+r = requests.get(f"{api}/getUpdates", timeout=15).json()
+if r.get("error_code") == 409:  # a webhook is set: getUpdates is disabled until it is removed
+    requests.get(f"{api}/deleteWebhook", timeout=15)
+    r = requests.get(f"{api}/getUpdates", timeout=15).json()
+print("Telegram getUpdates:", r.get("ok"), len(r.get("result", [])), "aggiornamenti",
+      r.get("description", ""), file=sys.stderr)
 chats = [u[k]["chat"]["id"] for u in r.get("result", []) for k in ("message", "my_chat_member") if k in u]
 print(chats[-1] if chats else "")
 PY

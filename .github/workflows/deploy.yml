@@ -1,0 +1,17 @@
+name: Deploy to VPS
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y -qq sshpass
+      - name: Install and restart bot on the VPS
+        env:
+          SSHPASS: ${{ secrets.VPS_PASSWORD }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+            "root@$VPS_HOST" "TELEGRAM_BOT_TOKEN='$TELEGRAM_BOT_TOKEN' bash -s" < deploy/remote.sh

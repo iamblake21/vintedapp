@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Blake Cards">
+  <rect x="14" y="6" width="34" height="48" rx="5" fill="#1d2a52" stroke="#f5b83d" stroke-width="3" transform="rotate(-10 31 30)"/>
+  <rect x="18" y="10" width="34" height="48" rx="5" fill="#0f1730" stroke="#f5b83d" stroke-width="3" transform="rotate(8 35 34)"/>
+  <text x="35" y="42" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" fill="#f5b83d" transform="rotate(8 35 34)">BC</text>
+</svg>

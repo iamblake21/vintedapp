@@ -1,0 +1,29 @@
+name: Deploy blakecards.it to VPS
+on:
+  push:
+    branches: [main, claude/blakecards-ecommerce-site-4k2byq]
+    paths: ["site/**", "deploy/site.sh", ".github/workflows/deploy-site.yml"]
+  workflow_dispatch:
+concurrency: deploy-site
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y -qq sshpass
+      - name: Upload site and configure nginx on the VPS
+        env:
+          SSHPASS: ${{ secrets.VPS_PASSWORD }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          SSH_OPTS="-o StrictHostKeyChecking=accept-new -o ConnectTimeout=20"
+          sshpass -e ssh $SSH_OPTS "root@$VPS_HOST" "rm -rf /tmp/blakecards-site"
+          sshpass -e scp $SSH_OPTS -q -r site "root@$VPS_HOST:/tmp/blakecards-site"
+          sshpass -e ssh $SSH_OPTS "root@$VPS_HOST" "bash -s" < deploy/site.sh
+      - name: Check the site answers
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          curl -fsS -o /dev/null -w "HTTP %{http_code} via IP\n" -H "Host: www.blakecards.it" "http://$VPS_HOST/"
+          curl -fsS -o /dev/null -w "HTTP %{http_code} https://www.blakecards.it\n" https://www.blakecards.it/ \
+            || echo "www.blakecards.it non risponde ancora in HTTPS (DNS o certificato non pronti)"

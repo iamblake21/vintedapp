@@ -25,34 +25,39 @@ cercalo e sostituiscilo in tutti i file `.html`.
 cd site && python3 -m http.server 8000   # poi apri http://localhost:8000
 ```
 
-## Pubblicazione gratuita su Cloudflare Pages
+## Pubblicazione sulla VPS
 
-Funziona anche con repository privato (GitHub Pages gratis richiede il repo pubblico).
+Il sito gira sulla stessa VPS del bot Vinted, con nginx e certificato HTTPS gratuito di Let's Encrypt.
+Il bot non viene toccato.
 
-1. Crea un account gratuito su dash.cloudflare.com.
-2. **Workers & Pages → Create → Pages → Connect to Git**, scegli il repository.
-3. Impostazioni di build:
-   - Production branch: il branch da pubblicare (per esempio `main` dopo il merge)
-   - Framework preset: *None*
-   - Build command: *(vuoto)*
-   - Build output directory: `site`
-4. Dopo il primo deploy il sito è online su `<nome>.pages.dev`. Ogni push lo aggiorna.
+Il workflow `.github/workflows/deploy-site.yml` parte da solo a ogni push che modifica `site/`
+(sul branch `main` o su quello di sviluppo). Usa i secret `VPS_HOST` e `VPS_PASSWORD` già presenti
+e lancia `deploy/site.sh` sulla VPS, che:
+
+1. installa nginx e certbot se mancano (si ferma se la porta 80 è già occupata da un altro programma);
+2. copia il sito in `/var/www/blakecards` e configura nginx con gli stessi header di sicurezza di `_headers`;
+3. se il DNS punta già alla VPS, chiede il certificato HTTPS, reindirizza `http://` e `blakecards.it`
+   su `https://www.blakecards.it` e lo rinnova in automatico.
 
 ### Collegare il dominio Register.it
 
-Consigliato: **sposta i nameserver su Cloudflare** (gratis). Così funzionano sia
-`blakecards.it` sia `www.blakecards.it`, con HTTPS automatico.
+In Register.it: area clienti → blakecards.it → **Gestione DNS**, e crea (o modifica) due record **A**
+verso l'IP della VPS:
 
-1. In Cloudflare: **Add a site → blakecards.it → piano Free**. Cloudflare ti dà due nameserver.
-2. In Register.it: area clienti → dominio → **DNS e nameserver → modifica nameserver**,
-   inserisci i due di Cloudflare. Per i `.it` la propagazione può richiedere qualche ora.
-3. In Cloudflare Pages → progetto → **Custom domains**: aggiungi `www.blakecards.it` e `blakecards.it`.
-4. Reindirizza il dominio senza www sul www: **Rules → Redirect Rules**, da `blakecards.it/*`
-   a `https://www.blakecards.it/${1}`, codice 301.
+| Nome | Tipo | Valore |
+|---|---|---|
+| `@` (blakecards.it) | A | IP della VPS |
+| `www` | A | IP della VPS |
 
-Con i DNS su Cloudflare puoi attivare gratis anche **Email Routing**: un indirizzo come
-`info@blakecards.it` che inoltra alla tua email personale. Se lo fai, sostituisci la PEC
-come contatto per i clienti (la PEC resta nel footer come dato obbligatorio).
+Cancella eventuali record A/CNAME già esistenti per quei nomi (per esempio la pagina di parcheggio di Register.it).
+Dopo la propagazione (da pochi minuti a qualche ora) rilancia il deploy: su GitHub → **Actions →
+Deploy blakecards.it to VPS** → ultima esecuzione → **Re-run all jobs**. Il log dice se il DNS è pronto
+e se l'HTTPS è attivo.
+
+### Alternativa: Cloudflare Pages
+
+Se in futuro vuoi togliere il sito dalla VPS: Cloudflare Pages è gratis, legge `_headers` così com'è.
+Workers & Pages → Connect to Git, build command vuoto, output directory `site`.
 
 ## Da verificare prima di pubblicare
 

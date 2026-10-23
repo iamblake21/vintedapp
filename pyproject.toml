@@ -2,8 +2,8 @@
 name = "vinted-alerts"
 version = "0.1.0"
 description = "Avvisi di prezzo per Vinted: monitora il feed e segnala gli affari"
-requires-python = ">=3.11"
-dependencies = ["requests>=2.28"]
+requires-python = ">=3.10"
+dependencies = ["requests>=2.28", "tomli>=2.0; python_version < '3.11'"]
 
 [project.optional-dependencies]
 dev = ["pytest"]

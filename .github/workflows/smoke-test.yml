@@ -1,7 +1,7 @@
 name: Vinted API smoke test
 on:
   push:
-    paths: ["scripts/*.py", "vinted_alerts/**", "tests/**", ".github/workflows/smoke-test.yml"]
+    paths: ["scripts/*.py", "vinted_alerts/**", "tests/**", "deploy/**", ".github/workflows/smoke-test.yml"]
   workflow_dispatch:
 jobs:
   smoke:
@@ -14,3 +14,16 @@ jobs:
       - run: pip install requests pytest
       - run: python -m pytest -q
       - run: python scripts/smoke_test.py
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo bash deploy/install.sh
+      - run: systemctl cat vinted-alerts
+      - name: Service starts and scans
+        run: |
+          sudo systemctl start vinted-alerts
+          sleep 25
+          systemctl is-active vinted-alerts
+          sudo journalctl -u vinted-alerts --no-pager | tail -20
+          sudo journalctl -u vinted-alerts --no-pager | grep -q "mediana iniziale"

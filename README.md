@@ -14,7 +14,7 @@ annuncio:
 
 ## Installazione
 
-Serve Python 3.11+.
+Serve Python 3.10+.
 
 ```bash
 pip install -r requirements.txt
@@ -69,6 +69,27 @@ Consigli per ottenere una media sensata:
 
 Ogni avviso contiene foto, prezzo, il motivo (target o percentuale sotto la mediana) e il link
 diretto all'annuncio.
+
+## Installazione su VPS (sempre attivo)
+
+Su un VPS Debian/Ubuntu, collegato via SSH:
+
+```bash
+git clone https://github.com/iamblake21/vintedapp.git
+cd vintedapp
+sudo bash deploy/install.sh        # Python, ambiente virtuale e servizio systemd
+nano config.toml                   # le tue ricerche + [telegram]
+.venv/bin/python -m vinted_alerts test-notify
+sudo systemctl restart vinted-alerts
+journalctl -u vinted-alerts -f     # log in tempo reale
+```
+
+Il servizio riparte da solo dopo errori o riavvii del server. Dopo ogni modifica a
+`config.toml` esegui `sudo systemctl restart vinted-alerts`. Per aggiornare il codice:
+`git pull && sudo systemctl restart vinted-alerts`.
+
+Consumi indicativi: ~50 MB di RAM, CPU trascurabile, ~0,5 MB di traffico per ricerca a
+ogni scansione (3 ricerche ogni 60 s ≈ 60 GB/mese).
 
 ## Note
 

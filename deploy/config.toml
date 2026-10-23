@@ -1,0 +1,48 @@
+# Ricerche usate sul VPS. Il deploy (.github/workflows/deploy.yml) copia questo file
+# in /opt/vintedapp/config.toml mantenendo la sezione [telegram] già presente sul server.
+# Niente segreti qui: il repository è pubblico.
+
+[general]
+domain = "www.vinted.it"
+interval = 60
+pages_per_scan = 1
+bootstrap_pages = 3
+use_total_price = true   # i prezzi target valgono sul totale con protezione acquisti
+db_path = "vinted_alerts.db"
+
+[[watch]]
+name = "Pokémon HeartGold (DS)"
+query = "pokemon heartgold nintendo ds"
+catalog_ids = [3026]     # solo giochi: niente carte, spille, Pokéwalker
+target_price = 150
+min_price = 20
+include_words = ["gold|oro"]
+exclude_words = ["pokewalker", "pokéwalker", "boite vide", "boîte vide", "scatola vuota",
+                 "solo scatola", "custodia vuota", "box only", "only box", "empty box", "tapa",
+                 "psa", "carta", "card", "holo", "repro", "replica", "fake",
+                 "sans jeu", "senza gioco", "sans cartouche", "senza cartuccia", "no game",
+                 "solo manuale", "notice nintendo", "notice pour", "notice seule",
+                 "spille", "spilla", "pins", "sticker", "poster", "peluche", "plush"]
+
+[[watch]]
+name = "Pokémon Pokopia (Switch 2)"
+query = "pokemon pokopia"
+catalog_ids = [3026]     # Elettronica > Videogiochi e console > Giochi (niente gadget)
+target_price = 30
+min_price = 10
+include_words = ["pokopia"]
+exclude_words = ["amiibo", "codice", "code", "digitale", "digital", "custodia vuota",
+                 "boite vide", "boîte vide", "solo custodia", "steelbook", "guida",
+                 "cuaderno", "quaderno", "cahier", "socken", "calzini", "chaussettes",
+                 "sticker", "adesivi", "autocollant", "mug", "tazza", "affiche", "poster",
+                 "peluche", "plush", "portachiavi", "llavero", "porte-clé", "t-shirt",
+                 "maglietta", "figure", "figurine", "carte", "card", "spille", "pins", "zaino"]
+
+[[watch]]
+name = "Pikachu ex 276/217"
+query = "pikachu ex 276"
+target_price = 300
+min_price = 80           # sotto questa cifra sono quasi sempre falsi
+include_words = ["276"]
+exclude_words = ["proxy", "fake", "gold label", "gold metal", "metal", "custom", "replica",
+                 "orica", "ccc", "dorata", "oro", "277"]

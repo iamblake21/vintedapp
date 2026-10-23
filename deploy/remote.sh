@@ -48,13 +48,10 @@ PY
   if [[ -n "$CHAT_ID" ]]; then
     printf '\n[telegram]\nbot_token = "%s"\nchat_id = "%s"\n' "$TELEGRAM_BOT_TOKEN" "$CHAT_ID" >> config.toml
     echo "==> Telegram configurato"
+    .venv/bin/python -m vinted_alerts test-notify >/dev/null && echo "==> Notifica di prova inviata su Telegram"
   else
     echo "==> TELEGRAM: nessuna chat trovata. Apri il bot su Telegram, premi Avvia (/start) e rilancia il deploy."
   fi
-fi
-
-if grep -q '^\[telegram\]' config.toml; then
-  .venv/bin/python -m vinted_alerts test-notify >/dev/null && echo "==> Notifica di prova inviata su Telegram"
 fi
 
 systemctl restart vinted-alerts

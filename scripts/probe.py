@@ -1,7 +1,6 @@
-"""Diagnostics: find which Vinted catalog endpoint currently answers."""
+"""Diagnostics: dump the structure of item cards on Vinted's catalog page."""
 
 import re
-from urllib.parse import urljoin
 
 import requests
 
@@ -12,26 +11,26 @@ s = requests.Session()
 s.headers.update({"User-Agent": UA, "Accept-Language": "it-IT,it;q=0.9"})
 s.get(BASE + "/")
 
-page = s.get(BASE + "/catalog?search_text=nike%20dunk&order=newest_first").text
-for needle in ("nike", "Nike", "€", "amount", "currency_code", "photo"):
-    idx = page.find(needle)
-    print(f"PAGE {needle!r}: count={page.count(needle)}",
-          repr(page[max(0, idx - 200): idx + 200]) if idx >= 0 else "")
+for page_no in (1, 2):
+    html = s.get(BASE + "/catalog", params={"search_text": "nike dunk", "order": "newest_first",
+                                            "page": page_no}).text
+    ids = list(dict.fromkeys(re.findall(r'product-item-id-(\d+)', html)))
+    print(f"PAGE {page_no}: {len(ids)} items, first ids {ids[:5]}")
+    if page_no == 1:
+        alts = re.findall(r'alt="([^"]*€[^"]*)"', html)
+        for a in alts[:15]:
+            print("ALT", a)
+        start = html.find("product-item-id-" + ids[0])
+        card_start = html.rfind("<div", 0, start - 1500)
+        print("CARD", html[start - 1500:start + 3500])
+        # Is the item data also embedded as JSON (RSC payload)?
+        for needle in (ids[0] + '\\\\",', '\\"id\\":' + ids[0], '"id":' + ids[0], ids[0]):
+            print("JSON?", repr(needle), html.count(needle))
+        idx = html.find('\\"id\\":' + ids[0])
+        if idx >= 0:
+            print("RSC", html[idx - 300: idx + 2000])
 
-scripts = sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', page)))
-seen = set()
-for src in scripts:
-    js = s.get(urljoin(BASE, src), timeout=15).text
-    for pat in (r'.{200}catalog/blocks.{200}', r'.{120}catalogItems.{120}',
-                r'.{60}["`\'/]api/v\d.{100}', r'.{60}web/api.{100}', r'.{40}baseURL.{120}'):
-        for m in re.finditer(pat, js):
-            snippet = m.group(0)
-            if snippet not in seen and len(seen) < 60:
-                seen.add(snippet)
-                print("JS", src.rsplit('/', 1)[-1], pat[:20], repr(snippet))
-
-params = {"search_text": "nike dunk", "per_page": 3, "order": "newest_first"}
-for p in ["/api/v2/catalog/blocks", "/web/api/core/catalog/blocks", "/catalog/blocks",
-          "/api/v2/catalog/items?", "/web/api/core/catalog/items/search"]:
-    r = s.get(BASE + p, params=params, headers={"Accept": "application/json"})
-    print("TRY", p, r.status_code, r.headers.get("content-type"), r.text[:400].replace("\n", " "))
+# Filters from website URLs: price_to / catalog[] / brand_ids[]
+r = s.get(BASE + "/catalog", params={"search_text": "nike dunk", "price_to": "30", "currency": "EUR",
+                                     "order": "newest_first"})
+print("PRICE_TO", re.findall(r'alt="[^"]*?(\d+[.,]\d+) €, (\d+[.,]\d+) €"', r.text)[:20])

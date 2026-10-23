@@ -24,7 +24,8 @@ class Deal:
 
 def matches_filters(watch: Watch, item: Item) -> bool:
     title = item.title.lower()
-    if any(w not in title for w in watch.include_words):
+    # "gold|oro" means either word is fine.
+    if any(not any(alt in title for alt in w.split("|")) for w in watch.include_words):
         return False
     if any(w in title for w in watch.exclude_words):
         return False

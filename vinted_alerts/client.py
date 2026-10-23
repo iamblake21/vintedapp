@@ -165,7 +165,15 @@ class VintedClient:
         delay = 2.0
         for attempt in range(1, self.max_retries + 1):
             if not self._has_cookie:
-                self._refresh_session()
+                try:
+                    self._refresh_session()
+                except (VintedError, requests.RequestException) as e:
+                    if attempt == self.max_retries:
+                        raise
+                    log.warning("%s, riprovo tra %.0fs", e, delay)
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
             resp = self.session.get(self.base + "/catalog", params=query, timeout=self.timeout)
             if resp.status_code == 200:
                 items = parse_catalog_html(resp.text, self.base)

@@ -18,6 +18,14 @@ fi
 cd "$APP_DIR"
 bash deploy/install.sh
 
+# Searches come from the repo; keep the server-only [telegram] section (with the token).
+if [[ -f deploy/config.toml ]]; then
+  TELEGRAM_SECTION=$(sed -n '/^\[telegram\]/,$p' config.toml)
+  cp deploy/config.toml config.toml
+  [[ -n "$TELEGRAM_SECTION" ]] && printf '\n%s\n' "$TELEGRAM_SECTION" >> config.toml
+  echo "==> Ricerche aggiornate: $(grep -c '^\[\[watch\]\]' config.toml)"
+fi
+
 TELEGRAM_BOT_TOKEN=$(printf '%s' "${TELEGRAM_BOT_TOKEN:-}" | tr -d '[:space:]')
 export TELEGRAM_BOT_TOKEN
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]] && ! grep -q '^\[telegram\]' config.toml; then

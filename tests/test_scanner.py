@@ -65,6 +65,14 @@ def test_target_price_and_word_filters(tmp_path):
     assert [d.item.id for d in scanner.run_once()] == [3]
 
 
+def test_include_words_alternatives():
+    from vinted_alerts.deals import matches_filters
+    watch = parse_watch({"name": "w", "query": "x", "target_price": 1, "include_words": ["gold|oro"]})
+    assert matches_filters(watch, item(1, 1, "Pokemon Versione Oro DS"))
+    assert matches_filters(watch, item(2, 1, "Pokemon HeartGold"))
+    assert not matches_filters(watch, item(3, 1, "Pokemon SoulSilver"))
+
+
 def test_target_only_watch_narrows_search():
     watch = parse_watch({"name": "w", "query": "x", "target_price": 30})
     assert ("price_to", "30") in watch.params and ("currency", "EUR") in watch.params

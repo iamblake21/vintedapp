@@ -31,7 +31,7 @@ class Watch:
     below_average_pct: float | None = None  # alert when price is X% under the median
     min_samples: int = 20                # prices needed before trusting the median
     min_price: float = 0.0               # ignore listings cheaper than this (often fakes/accessories)
-    include_words: list[str] = field(default_factory=list)  # title must contain all of these
+    include_words: list[str] = field(default_factory=list)  # title must contain all ("a|b" = either)
     exclude_words: list[str] = field(default_factory=list)  # title must contain none of these
 
 

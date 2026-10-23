@@ -11,12 +11,24 @@ s = requests.Session()
 s.headers.update({"User-Agent": UA, "Accept-Language": "it-IT,it;q=0.9"})
 s.get(BASE + "/")
 
+for url in (BASE + "/catalog?search_text=nike%20dunk&order=newest_first",
+            BASE + "/catalog?search_text=nike+dunk&order=newest_first",
+            BASE + "/catalog?search_text=nike%20dunk&order=newest_first&page=1"):
+    r = s.get(url)
+    title = re.search(r"<title>(.*?)</title>", r.text)
+    print("VARIANT", url, r.status_code, len(r.text), title.group(1) if title else None,
+          r.text.count("product-item-id-"))
+
 for page_no in (1, 2):
-    html = s.get(BASE + "/catalog", params={"search_text": "nike dunk", "order": "newest_first",
-                                            "page": page_no}).text
+    url = BASE + "/catalog?search_text=nike%20dunk&order=newest_first"
+    if page_no > 1:
+        url += f"&page={page_no}"
+    resp = s.get(url)
+    html = resp.text
+    print("STATUS", resp.status_code, len(html), resp.url)
     ids = list(dict.fromkeys(re.findall(r'product-item-id-(\d+)', html)))
     print(f"PAGE {page_no}: {len(ids)} items, first ids {ids[:5]}")
-    if page_no == 1:
+    if page_no == 1 and ids:
         alts = re.findall(r'alt="([^"]*€[^"]*)"', html)
         for a in alts[:15]:
             print("ALT", a)
@@ -31,6 +43,5 @@ for page_no in (1, 2):
             print("RSC", html[idx - 300: idx + 2000])
 
 # Filters from website URLs: price_to / catalog[] / brand_ids[]
-r = s.get(BASE + "/catalog", params={"search_text": "nike dunk", "price_to": "30", "currency": "EUR",
-                                     "order": "newest_first"})
+r = s.get(BASE + "/catalog?search_text=nike%20dunk&price_to=30&currency=EUR&order=newest_first")
 print("PRICE_TO", re.findall(r'alt="[^"]*?(\d+[.,]\d+) €, (\d+[.,]\d+) €"', r.text)[:20])
